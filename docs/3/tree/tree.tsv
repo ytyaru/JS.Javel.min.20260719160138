@@ -1,6 +1,8 @@
 # ルート: hudo						# 文書構造用言語と構文解析器の基底クラス群
 facade		# 文書構造用言語と原稿を受け取り構文解析器を生成して構文木を返す。
 	main.ts		# 言語と原稿から構文解析器を生成し構文木を返すAPI。
+preprosessor	# 事前処理（パース前に原稿にある/n,/t,/ ,//,／　／／などを置換する）
+	main.ts
 common
 	token.ts
 	node.ts
@@ -39,13 +41,14 @@ grammar		# 文書構造用言語の構文解析アルゴリズム集。
 		pair-tree.ts	# JSON（XML,YAML,JSONなど木構造の要素(節)に組を持つもの）
 	document/		# 文書構造
 		fence/
+			content-split.ts	# フェンス内容contentを接辞affixと本文bodyに分割する
 			affix/
 				none.ts		# フェンス開始記号直後から最短論理LSまでの間に何もないこと
 				one.ts		# フェンス開始記号直後から最短論理LSまでの間に文字列があること
 				line.ts		# data/list.ts継承
 				list.ts		# data/pair-grid.ts継承
 				tree.ts		# data/pair-tree.ts継承
-			content/
+			body/
 				escape.ts	# 内容をparagraph,line-break,textとしてパースしchildrenに設定する
 				config.ts	# 内容を指定のdata構文でパースしchildrenに設定する
 				origin.ts	# 内容を独自のtokenize,lexメソッドでパースしchildrenに設定する
