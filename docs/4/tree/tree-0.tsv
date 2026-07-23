@@ -1,36 +1,24 @@
-# ルート: hudo						# 文書構造用言語と構文解析器の基底クラス群
-facade		# 文書構造用言語と原稿を受け取り構文解析器を生成して構文木を返す。
-	main.ts		# 言語と原稿から構文解析器を生成し構文木を返すAPI。
-preprocessor/		# 事前処理（パース前に原稿にある/n,/t,/ ,//,／　／／などを置換する）
-	main.ts
-	document.ts		# 文書構造分割メタ文字置換: `\${PS}`
-	unicode.ts		# 任意Unicode文字置換: `\u{2028}`
-	user.ts			# ユーザが指定した任意語を置換: `\d{主人公名}`
-	file.ts			# 指定ファイルパスの内容で置換: `\f{./dir/a.txt:5:10~25:3}`
-common
-	token.ts
-	node.ts
-language	# 文書構造用言語。
-	separator.ts		# 文書構造/データ構造の分割メタ文字抽象クラス(論理PS,LS,US等)
-	grammar/			# 構文解析アルゴリズム
-		zone/			# これはHudoLanguageだけで完結できる（ここで不変定義すべき）
-			fence.ts	# 最上位フェンスの文字列範囲だけを抽出する
-			block.ts	# 最上位ブロックの文字列範囲だけを抽出する
-			space.ts	# Zone間にある論理LSだけを抽出する
-		piece/			# これはHudoSyntax以降に依存する（外部注入により初めて定義される）
-			inline.ts	# 具象形を実装するインタフェースのみ
-	register/
-		syntax.ts		# 構文の作成・登録・重複確認
-		char.ts			# メタ文字の一括取得と重複確認
-tokenizer	# 文書構造用構文解析器のうち字句解析。
-	tokenizer.ts		# 抽象型。Cursorを使う
-	zone/
-		zone.ts			# ZoneTokenizer
-		tree.ts			# ZoneTreeTokenizer
-		fence.ts		# FenceTokenizer
-	piece/
-		inline.ts		# InlineTokenizer
-grammar		# 文書構造用言語の構文解析アルゴリズム集。
+Hudo						# 文書構造用言語と構文解析器の基底クラス群
+	language/
+		separator.ts		# 文書構造/データ構造の分割メタ文字抽象クラス(論理PS,LS,US等)
+		grammar/			# 構文解析アルゴリズム
+			zone/
+				fence.ts	# 最上位フェンスの文字列範囲だけを抽出する
+				block.ts	# 最上位ブロックの文字列範囲だけを抽出する
+				space.ts	# Zone間にある論理LSだけを抽出する
+			piece/
+				inline.ts	# 具象形を実装するインタフェースのみ
+		register/
+			syntax.ts		# 構文の作成・登録・重複確認
+			char.ts			# メタ文字の一括取得と重複確認
+	tokenizer/
+		zone/
+			core.ts			# ZoneTokenizer
+			tree.ts			# ZoneTreeTokenizer
+			fence.ts		# FenceTokenizer
+		piece/
+			inline.ts		# InlineTokenizer
+HudoGrammar					# 文書構造用言語の構文解析アルゴリズム集
 	data/			# データ構造
 		pair.ts			# 抽象型
 		pair/			# k=123, k'one-line-str, k"has-newline-str のような鍵と値の組。
@@ -39,27 +27,20 @@ grammar		# 文書構造用言語の構文解析アルゴリズム集。
 			text-pair.ts	# 鍵値区切文字"
 		list.ts			# v1 v2 v3 のような複数値。
 		grid.ts			# 表。TSV,CSV。要素は値。
-		tree.ts			# 木。要素は値。抽象型。TreeGrammar。
-		tree/
-			ascii-tree.ts	# 行頭から連続するTAB等の数を数えてスタック制御する文法
-			unicode-tree.ts	# US/RS/GS/FSの制御文字をトリガーにしてノードを上下させる文法
-		tree-factory.ts		# TreeGrammarFactory。Separatorの型を見て具象を切り替える
+		tree.ts			# 木。要素は値。
 		pair-list.ts	# k:1 a:2 b:3 のような複数組を要素に持つ。
 		pair-grid.ts	# LTSV（pair-listの項目区切を改行にしたもの）
 		pair-tree.ts	# JSON（XML,YAML,JSONなど木構造の要素(節)に組を持つもの）
 	document/		# 文書構造
 		fence/
-			content-split.ts	# フェンス内容contentを接辞affixと本文bodyに分割する
 			affix/
 				none.ts		# フェンス開始記号直後から最短論理LSまでの間に何もないこと
 				one.ts		# フェンス開始記号直後から最短論理LSまでの間に文字列があること
 				line.ts		# data/list.ts継承
 				list.ts		# data/pair-grid.ts継承
 				tree.ts		# data/pair-tree.ts継承
-			body/
-				escape.ts	# 内容をparagraph,line-break,textとしてパースしchildrenに設定する
-				config.ts	# 内容を指定のdata構文でパースしchildrenに設定する
-				origin.ts	# 内容を独自のtokenize,lexメソッドでパースしchildrenに設定する
+			content/
+				// なし。独自実装すべき。
 		space/
 			only.ts		# 論理LSのみで構成されている
 		block/
@@ -92,18 +73,30 @@ grammar		# 文書構造用言語の構文解析アルゴリズム集。
 			triple.ts			# `｜漢字《かんじ》`等任意三字で囲まれている
 			reverse.ts			# `あ漢字《かんじ》`等任意基点位置から任意始点位置へ逆走し判定する
 			double-enclose.ts	# `[text](https://)`, `[![alt](a.png)](htts://)`等二個の囲み文字が続いたもので一つの要素とする
-lexer		# 文書構造用構文解析器のうち意味づけ（トークンをAstNodeに変換）する。
-	main.ts		# Lexer
-	core/
-		fence.ts
-		block.ts
-		space.ts
-		inline.ts
-	node/
-		fence/		# なし
-		space/		# なし
+HodoLanguage（HudoGrammar利用）	# 文書構造における最小限の具象AstNode集
+	syntax/
+		fence/
+			escape.ts	# 内容をparagraph,line-break,textとしてパースしchildrenに設定する
+			config.ts	# 内容を指定のdata構文でパースしchildrenに設定する
+		space/
+			// なし
 		block/
 			paragraph.ts
 		inline/
 			line-break.ts	# br改行。内部にchildrenを持たない
 			text.ts			# TextNode扱い。内部にchildrenを持たない
+独自言語（HudoLanguage継承、HudoGrammar利用）	# 文書構造における独自構文のアルゴリズムと具象AstNode集
+	syntax/
+		fence/
+			gikyoku.ts
+		space/
+			// なし
+		block/
+			escape.ts			# 内容をパースせず
+			heading.ts
+			thematic-break.ts
+			gikyoku.ts
+		inline/
+			ruby.ts
+			emphasis.ts
+			warichu.ts

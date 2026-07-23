@@ -1,12 +1,8 @@
 # ルート: hudo						# 文書構造用言語と構文解析器の基底クラス群
 facade		# 文書構造用言語と原稿を受け取り構文解析器を生成して構文木を返す。
 	main.ts		# 言語と原稿から構文解析器を生成し構文木を返すAPI。
-preprocessor/		# 事前処理（パース前に原稿にある/n,/t,/ ,//,／　／／などを置換する）
+preprosessor	# 事前処理（パース前に原稿にある/n,/t,/ ,//,／　／／などを置換する）
 	main.ts
-	document.ts		# 文書構造分割メタ文字置換: `\${PS}`
-	unicode.ts		# 任意Unicode文字置換: `\u{2028}`
-	user.ts			# ユーザが指定した任意語を置換: `\d{主人公名}`
-	file.ts			# 指定ファイルパスの内容で置換: `\f{./dir/a.txt:5:10~25:3}`
 common
 	token.ts
 	node.ts
@@ -39,11 +35,7 @@ grammar		# 文書構造用言語の構文解析アルゴリズム集。
 			text-pair.ts	# 鍵値区切文字"
 		list.ts			# v1 v2 v3 のような複数値。
 		grid.ts			# 表。TSV,CSV。要素は値。
-		tree.ts			# 木。要素は値。抽象型。TreeGrammar。
-		tree/
-			ascii-tree.ts	# 行頭から連続するTAB等の数を数えてスタック制御する文法
-			unicode-tree.ts	# US/RS/GS/FSの制御文字をトリガーにしてノードを上下させる文法
-		tree-factory.ts		# TreeGrammarFactory。Separatorの型を見て具象を切り替える
+		tree.ts			# 木。要素は値。
 		pair-list.ts	# k:1 a:2 b:3 のような複数組を要素に持つ。
 		pair-grid.ts	# LTSV（pair-listの項目区切を改行にしたもの）
 		pair-tree.ts	# JSON（XML,YAML,JSONなど木構造の要素(節)に組を持つもの）
