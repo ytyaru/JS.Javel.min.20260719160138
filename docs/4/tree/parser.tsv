@@ -1,0 +1,108 @@
+# ルート: hudo						# 文書構造用言語と構文解析器の基底クラス群
+facade		# 文書構造用言語と原稿を受け取り構文解析器を生成して構文木を返す。
+	main.ts		# 言語と原稿から構文解析器を生成し構文木を返すAPI。
+common
+	token.ts
+	node.ts
+language	# 文書構造用言語。
+	separator.ts		# 文書構造/データ構造の分割メタ文字抽象クラス(論理PS,LS,US等)
+	grammar/			# 構文解析アルゴリズム
+		zone/			# これはHudoLanguageだけで完結できる（ここで不変定義すべき）
+			fence.ts	# 最上位フェンスの文字列範囲だけを抽出する
+			block.ts	# 最上位ブロックの文字列範囲だけを抽出する
+			space.ts	# Zone間にある論理LSだけを抽出する
+		piece/			# これはHudoSyntax以降に依存する（外部注入により初めて定義される）
+			inline.ts	# 具象形を実装するインタフェースのみ
+	register/
+		syntax.ts		# 構文の作成・登録・重複確認
+		char.ts			# メタ文字の一括取得と重複確認
+tokenizer	# 文書構造用構文解析器のうち字句解析。
+	main.ts				# ファザード
+	core/
+		cursor.ts
+		cursor-factory.ts
+		base.ts			# Tokenizer抽象型。Cursorを使う
+	zone/
+		zone.ts			# ZoneTokenizer
+		tree.ts			# ZoneTreeTokenizer
+		fence.ts		# FenceTokenizer
+	piece/
+		inline.ts		# InlineTokenizer
+grammar		# 文書構造用言語の構文解析アルゴリズム集。
+	data/			# データ構造
+		pair.ts			# 抽象型
+		pair/			# k=123, k'one-line-str, k"has-newline-str のような鍵と値の組。
+			number-pair.ts	# 鍵値区切文字=
+			string-pair.ts	# 鍵値区切文字'
+			text-pair.ts	# 鍵値区切文字"
+		list.ts			# v1 v2 v3 のような複数値。
+		grid.ts			# 表。TSV,CSV。要素は値。
+		tree.ts			# 木。要素は値。抽象型。TreeGrammar。
+		tree/
+			ascii-tree.ts	# 行頭から連続するTAB等の数を数えてスタック制御する文法
+			unicode-tree.ts	# US/RS/GS/FSの制御文字をトリガーにしてノードを上下させる文法
+		tree-factory.ts		# TreeGrammarFactory。Separatorの型を見て具象を切り替える
+		pair-list.ts	# k:1 a:2 b:3 のような複数組を要素に持つ。
+		pair-grid.ts	# LTSV（pair-listの項目区切を改行にしたもの）
+		pair-tree.ts	# JSON（XML,YAML,JSONなど木構造の要素(節)に組を持つもの）
+	document/		# 文書構造
+		fence/
+			content-split.ts	# フェンス内容contentを接辞affixと本文bodyに分割する
+			affix/
+				none.ts		# フェンス開始記号直後から最短論理LSまでの間に何もないこと
+				one.ts		# フェンス開始記号直後から最短論理LSまでの間に文字列があること
+				line.ts		# data/list.ts継承
+				list.ts		# data/pair-grid.ts継承
+				tree.ts		# data/pair-tree.ts継承
+			body/
+				escape.ts	# 内容をparagraph,line-break,textとしてパースしchildrenに設定する
+				config.ts	# 内容を指定のdata構文でパースしchildrenに設定する
+				origin.ts	# 内容を独自のtokenize,lexメソッドでパースしchildrenに設定する
+		space/
+			only.ts		# 論理LSのみで構成されている
+		block/
+			line				# 行（内容が「一行のみ／複数行のみ／一〜N行」の三つから選ぶ）
+				base.ts			# 三つを受け付けるコンストラクタ（以下はこれを継承する）
+				head			# 先頭行
+					only.ts		# 先頭行がすべてメタ文字である（`＊＊＊等`）
+					first.ts	# 先頭行先頭列にメタ文字、以降に内容がある（`＃＃…\n…`等）
+					last.ts		# 先頭行末尾列にメタ文字がある（`…：\n…`等）
+					middle.ts	# 先頭行非頭尾列にメタ文字がある（`…：…\n…`等）
+				tail			# 末尾行（全行必ず2以上）
+					only.ts		# 末尾行がすべてメタ文字である（`見出し\n===等`）
+					first.ts	# 末尾行先頭列にメタ文字、以降に内容がある（`\n＃＃…`等）
+					last.ts		# 末尾行末尾列にメタ文字がある（`\n…：`等）
+					middle.ts	# 末尾行非頭尾列にメタ文字がある（`\n…：…`等）
+				middle			# 中間行（非頭尾行。全行必ず3以上）
+					only.ts		# 中間行がすべてメタ文字である（`…\n∧∧∧\n…等`）
+					first.ts	# 中間行先頭列にメタ文字、以降に内容がある（`\n＃＃…\n…`等）
+					last.ts		# 中間行末尾列にメタ文字がある（`\n…：\n…`等）
+					middle.ts	# 中間行非頭尾列にメタ文字がある（`\n…：…\n…`等）
+				all				# 全行
+					only.ts		# 全行全列すべてメタ文字である（`＃＃\n＃＃等`）
+					first.ts	# 全行先頭列にメタ文字、以降に内容がある（`＞１\n＞２`等）
+					last.ts		# 全行末尾列にメタ文字がある（`…：\n…：`等）
+					middle.ts	# 全行非頭尾列にメタ文字がある（`…：…\n…：…`等）
+			indent.ts	# 一行目がインデント無し、二行目以降が全行1つだけインデントあり
+			tree.ts		# 一行目がインデント無し、二行目以降は木構造内で自由
+			grid.ts		# 全行に同数だけのメタ文字がある（テーブル系）
+		inline/
+			enclose.ts			# `；傍点；`, `｛エスケープ｝`等任意二字で囲まれている
+			triple.ts			# `｜漢字《かんじ》`等任意三字で囲まれている
+			reverse.ts			# `あ漢字《かんじ》`等任意基点位置から任意始点位置へ逆走し判定する
+			double-enclose.ts	# `[text](https://)`, `[![alt](a.png)](htts://)`等二個の囲み文字が続いたもので一つの要素とする
+lexer		# 文書構造用構文解析器のうち意味づけ（トークンをAstNodeに変換）する。
+	main.ts		# Lexer
+	core/
+		fence.ts
+		block.ts
+		space.ts
+		inline.ts
+	node/
+		fence/		# なし
+		space/		# なし
+		block/
+			paragraph.ts
+		inline/
+			line-break.ts	# br改行。内部にchildrenを持たない
+			text.ts			# TextNode扱い。内部にchildrenを持たない

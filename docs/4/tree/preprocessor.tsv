@@ -1,0 +1,10 @@
+# ルート: hudo						# 文書構造用言語と構文解析器の基底クラス群
+normalizer
+	charset.ts		# 1. 文字セット: UTF8であること
+	format.ts		# 2. 正規化形式: NFCであること
+	bom.ts			# 3. BOM: 無いこと
+replacer
+	file.ts			# 1. 指定ファイルパスの内容で置換: `\f{./dir/a.txt:5:10~25:3}`
+	unicode.ts		# 2. 任意Unicode文字置換: `\u{2028}`
+	user.ts			# 3. ユーザが指定した任意語を置換: `\d{主人公名}`
+

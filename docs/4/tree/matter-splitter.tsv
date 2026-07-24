@@ -1,0 +1,9 @@
+# Matter（マター：冊子構成要素・篇・篇域）
+common
+	token.ts	# MattarToken、表紙、裏表紙、目次、本文、設定、検索、機能…
+	node.ts
+language	# 篇用言語。
+grammar		# 篇用言語の構文解析アルゴリズム集。
+tokenizer	# 篇用構文解析器のうち字句解析。
+lexer		# 篇用構文解析器のうち意味づけ（トークンをAstNodeに変換）する。
+
